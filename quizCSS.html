@@ -1,0 +1,357 @@
+<style>
+
+    body {
+      overflow-y: scroll;
+    }
+  
+    .login-logo {
+      position: relative;
+      left: 38%;
+    }
+    
+    .inpcom {
+      font-style: oblique;
+      color: green;
+    }
+   
+     .formhdr {
+      background-color: white;
+      margin: -20px -20px 0 -20px;
+      padding: 10px 10px 10px 10px;
+      border-radius: 5px 5px 0 0;
+    }
+    
+    #timer {
+      background-color: black;
+      color: white;
+      padding: 1px 2px 1px 2px; 
+      font-family: courier, sans-serif;
+      font-size: 1em;
+      font-weight: bold;
+    }
+    
+    .hdr-block {
+      height: 50px;
+      width: auto;
+    }
+    .hdr-logo {
+      display: inline-block;
+      width: 100px;
+      height: 50px;
+      margin: 0px;
+    }
+    .hdr-text {
+      display: inline-block;
+      width: 425px;
+      height: 50px;
+      margin: 0px;
+      vertical-align: top;
+    }
+    .hdr-time {
+      display: inline-block;
+      width: auto; /* Only cause its the last one in its div*/
+      margin: 0 0 0 85px;
+    }
+    .hdr-btn {
+      display: inline-block;
+      width: auto;
+      margin: 0 0 0 5px;
+    }
+    #prevBtn {
+      margin: 10px 0 0 60px;
+    }
+    #doneBtn {
+      margin: 0 0 0 85px;
+      background-color: red;
+      font-weight: bold;
+    }
+
+    .formbody {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px 20px 20px 20px;
+      background: #daffb3;
+      border: 1px solid green;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+
+    .formrow {
+      display: block;
+      min-height: 30px;
+      margin: 10px 0px 10px 0px;
+    }
+    
+    .PopUpDlg {
+      position: absolute;
+      max-width: 600px;
+      height: auto;
+      left: 30%;
+      top: 20%;
+      padding: 20px 20px 20px 20px;
+      background: #daffb3;
+      border: 1px solid green;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+      opacity: 1;
+      z-index: 1003;
+    }
+    
+    #pageDotBar {
+      display: block;
+    }
+    
+    .pDBlabelTxt {
+      vertical-align: -6px;
+      font-weight: bold;
+    }
+      
+    .pDBlabel {
+      display: inline-block;
+      height: 30px;
+      padding-top: 6px;
+      margin-right: 5px;
+    }
+    
+    .pageDotWrap {
+      display: inline-block;
+      margin-right: 2px; /* controls gaps between page dots */
+      margin-bottom: 2px; /* controls space between wrapped lines */
+    }
+    
+    .pgDot, .pgDot-on, .pgDot-done {
+      position: relative;
+      z-index: 1;
+      top: 5px;
+      width: 24px;
+      height: 24px;
+      margin: 0 5px 5px 0;
+      padding: 5px 4px 0px 0px;
+      font-family: courier, sans-serif;
+      font-size: 100%;
+      text-align: center;
+      -moz-user-select: none;
+      -khtml-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px black;
+      background-color: white;
+    }
+    
+    .pgDot-on {
+      background-color: yellow;
+    }
+    
+    .pgDot-done {
+      background-color: lightgreen;
+    }
+    
+    .pgDot:hover, .pgDot-on:hover, .pgDot-done:hover {
+      top: 4px;
+      cursor: default;
+      box-shadow: 0 0 0 2px black, 0 2px 6px 0 rgba(0, 0, 0, 0.3), 0 6px 12px 0 rgba(0, 0, 0, 0.25);
+    }
+    
+    .pgDot:active, .pgDot-on:active, .pgDot-done:active {
+      top: 4px;
+      background-color: rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 0 2px blue, 0 2px 6px 0 rgba(0, 0, 0, 0.3), 0 6px 12px 0 rgba(0, 0, 0, 0.25);
+    }
+    
+    .formBtns {
+      display: block;
+      margin: 5px 0 0 0;
+      width: 100%;
+    }
+    
+    .formBtn {
+      display: inline-block;
+      padding: 0 10px 0 0;
+    }
+    
+    .stdBtn {
+      background-color: rgba(51, 133, 255, 0.95);
+      border: 1px solid transparent;
+      color: white;
+      padding: 5px 10px;
+      font-family: "Arial", sans-serif;
+      font-size: 0.75em;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+    }
+    
+    .stdBtn:hover {
+      background-color: rgba(51, 133, 255, 1.0);
+      border: 1px solid black;
+      box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.19);
+    }
+    
+    .stdBtn:active {
+      /* background-color: rgba(51, 100, 255, 1); */
+      background-color: rgba(51, 133, 255, 1.0);
+      opacity: 0.5;
+    }
+    
+    .logInBtn {
+      position: relative;
+      left: 42%;
+    }
+    
+    #ansfname {
+      margin-left: 0px;
+    }
+    #fnLabl {
+      margin-left: -20px;
+    }
+    #fsLabl {
+      margin-left: 10px;
+    }
+    
+    .hideBtn {
+      position: relative;
+      height: 10px;
+      width: 20px;
+      left: -95px;
+      z-index: -1;
+    }
+    
+    .formMsg {
+      display: block;
+      width: auto;
+      margin: 10px 0px 10px 0px;
+      padding: 3px 3px 3px 3px;
+      background: lightyellow;
+      border: 1px solid black;
+    }
+    
+    .center-text {
+      text-align: center;
+    }
+    
+    .font-bold {
+      font-weight: bold;
+    }
+    
+    #tstInstTxt {
+      width: 400px;
+      border-style: none;
+      border-color: Transparent;
+      overflow: auto;
+      outline: none;
+      resize: none;
+    }
+    
+    #queImg {
+      background: inherit;
+      max-width: 100%;
+      height: auto;
+    }
+     
+    #ansImg {
+      background: inherit;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .clrText {
+      background: inherit;
+      width: 500px;
+      height: auto;
+      font-family: inherit;
+      font-size: 1em;
+      border: none;
+      outline: none;
+      resize: none;
+      overflow: hidden;
+    }
+    
+    .clrText:hover {
+      cursor: default;
+    }
+    
+    /* Loader */
+    #loader {
+      display: none;
+      position:fixed;
+      top:0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      z-index:1002;
+    }
+    #loadTxt {
+      position: relative;
+      margin: auto;
+      top: 30px;
+      width: 60%;
+      text-align: center;
+      background-color: #daffb3;
+      border: 1px solid green;
+      border-radius: 50px;
+      z-index: 1002;
+    }
+    /* Spinner */
+    #spinner {
+      position: absolute;
+      left: 50%;
+      top: 30%;
+      width: 150px;
+      height: 150px;
+      margin: -75px 0 0 -75px;
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #80bd8f;
+      opacity: 1;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+      z-index: 1002;
+    }
+    #overlay {
+      display: none;
+      position:fixed;
+      top:0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color:#fff;
+      opacity:0.9;
+      z-index:1001;
+    }
+    
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Add animation to "page content" */
+    /*
+    .animate-bottom {
+      position: relative;
+      -webkit-animation-name: fadeout;
+      -webkit-animation-duration: 2s;
+      animation-name: fadeout;
+      animation-duration: 2s
+    }
+    @-webkit-keyframes fadeout {
+      from { opacity:0 }
+      to { opacity:0.9 }
+    }
+
+    @keyframes fadeout {
+      from{ opacity:0 }
+      to{ opacity:0.9 }
+    }
+    */
+
+  </style>
+
