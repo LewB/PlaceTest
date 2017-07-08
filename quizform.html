@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Placement Test</title>
+    <?!= include("quizCSS"); ?>
+  </head>
+  <body>
+  
+    <div id="loginform" class="formbody">
+      <div class="formhdr">
+        <img id="hdrLogo" class="login-logo" src="https://drive.google.com/uc?id=0BzTM0zUc18aXV1JTazU5cTNhWlE" alt="Foxcroft Logo Image" style="width:130px;height:57px;">
+        <br>Version: <span id="verNum"></span>
+      </div>
+      <div class="formrow">
+          <h2 class="center-text">ONLINE PLACEMENT TEST LOGIN</h2>
+      </div>
+      <div class="formrow">
+        <label for="email" class="font-bold">EMAIL ADDRESS:</label>
+        <input id="email" type="email" required="" autofocus><span class="inpcom"> (USE: first.last@foxcroft.org)</span>
+      </div>
+      <div class="formrow">
+        <label for="test" class="font-bold">TEST NAME:</label>
+        <input id="test" type="text"><span class="inpcom"> (USE: Emailed Test Name)</span>
+      </div>
+      <div class="formrow">
+        <label for="code" class="font-bold">TEST CODE:</label>
+        <input id="code" type="password" required=""><span class="inpcom"> (USE: Emailed Test Code)</span>
+      </div>
+      <div class="formrow">
+          <button id="logbtn" class="stdBtn logInBtn" onclick="submitLogin()">Log In</button>
+      </div>
+      <div id="logMsg" class="formMsg">
+          Enter Your Full Foxcroft Email Address and Test Code
+      </div>
+    </div>
+    
+    <div id="form-1" class="formbody" style="display:none">
+      <div id="headtitle" class="formhdr">
+        <div class="hdr-block">
+          <div id="titleLogo" class="hdr-logo"><img src="https://drive.google.com/uc?id=0BzTM0zUc18aXV1JTazU5cTNhWlE" alt="Foxcroft Logo"></div>
+          <div class="hdr-text"><h3 id="title" class="center-text">PLACEMENT TEST</h3></div>
+        </div>
+        <div class="formBtns">
+          <div class="formBtn"><span><strong>Login: </strong></span><span id="usrname"></span></div>
+          <div class="hdr-btn center-text"><button id="prevBtn" class="stdBtn" onclick="pgStep(-1)">Prev</button></div>
+          <div class="hdr-btn center-text"><button id="pageBtn" class="stdBtn" onclick="pgDotShow()">All Questions</button></div>
+          <div class="hdr-btn center-text"><button id="nextBtn" class="stdBtn" onclick="pgStep(1)">Next</button></div>
+          <div class="hdr-btn center-text"><button id="doneBtn" class="stdBtn" onclick="closeTest()">Submit Test</button></div>
+          <!-- TAKEN OUT <div class="hdr-time"><span>TIMER: </span><span id="timer">00:00</span></div> TAKEN OUT -->
+        </div>
+        <div>
+          <a id="docLink" href="" target="_blank"></a>
+        </div>
+      </div>
+      <!-- Page Dots were here -->
+      <div class="formrow">
+        <p class="font-bold"><span id="qNumTxt">QUESTION NUMBER: </span>
+                      <span id="qNum">1</span><span> OF </span><span id="qTot">0</span></p>
+        <textarea id="queText" class="clrText"></textarea>
+      </div>
+      <div class="formrow">
+        <div id="imgQuest" class="question">
+          <img id="queImg" src="" alt="Question Image">
+        </div>
+      </div>
+      <div class="formrow">
+        <div id="answer">
+          <p class="font-bold"><span id="aNumTxt">ANSWER NUMBER: </span><span id="aNum">1</span></p>
+          <img id="ansImg" src="" alt="Answer Image" style="display:none;">
+          <textarea id="ansTxt" rows="12" cols="60" placeholder="Type Your Answer Here" style="display:none;"></textarea>
+          <input id="ansBox" type="text" style="display:none;">
+          <!-- HTML FOR FORM IS DYNAMICALLY GENERATED -->
+          <form id="ansMCx" style="display:none;"></form>
+          <!-- END OF DYNAMICALLY GENERATED FORM -->
+        </div>
+      </div>
+      <div class="formrow">
+        <div id="fileInp">
+          <label>
+            <span id="fileBtn" class="stdBtn">Get Answer File</span>
+            <input id="files" class="hideBtn" type="file" onchange="fileSelected()" accept="image/*">
+          </label>
+          <strong><span id="fnLabl"> FILE: </span></strong><span id="ansfname">No File Selected</span>
+          <strong><span id="fsLabl"> SIZE: </span></strong><span id="ansfsize"></span>
+        </div>
+      </div>
+      <div class="formrow">
+        <div class="formBtns center-text">
+          <div class="formBtn"><button id="subBtn" class="stdBtn" onclick="submitForm()">Upload Answer File</button></div>
+        </div>
+      </div>
+      <div class="formrow">
+        <div id="progress" class="formMsg">
+          Select an Answer File to Upload.
+        </div>
+      </div>
+    </div>
+
+    <div id="PageNav" class="PopUpDlg" style="display:none">
+      <div id="pgNavTitle" class="formhdr">
+        <div class="hdr-block">
+          <div id="PgNavLogo" class="hdr-logo"><img src="https://drive.google.com/uc?id=0BzTM0zUc18aXV1JTazU5cTNhWlE" alt="Foxcroft Logo"></div>
+          <div class="hdr-text"><h3 class="center-text">PLACEMENT TEST NAVIGATION</h3></div>
+        </div>
+        <div>
+          <div class="center-text">Click on Number Below to Select Desired Question</div>
+        </div>
+      </div>
+      <!-- HTML FOR DIV IS DYNAMICALLY FILLED -->
+      <div id="pageDotBar"></div>
+      <!-- END OF DYNAMICALLY FILLED DIV -->
+    </div>
+    
+    <div id="InstPop" class="PopUpDlg" style="display:none">
+      <div id="IPopTitle" class="formhdr">
+        <div class="hdr-block">
+          <div id="IPopLogo" class="hdr-logo"><img src="https://drive.google.com/uc?id=0BzTM0zUc18aXV1JTazU5cTNhWlE" alt="Foxcroft Logo"></div>
+          <div class="hdr-text"><h3 class="center-text">PLACEMENT TEST INSTRUCTIONS</h3></div>
+        </div>
+      </div>
+      <div>
+        <br>
+        <textarea id="tstInstTxt" class="clrText">Please wait....</textarea>
+        <br>
+      </div>
+      <div class="formBtns center-text">
+        <div class="formBtn">
+          <button id="IPopOKBtn" class="stdBtn" onclick="InstPopOkClick()">OK</button>
+        </div>
+      </div>
+    </div>
+      
+    <div id="loader" style="display:none">
+      <div id="loadTxt">
+        <h2><p id="spinTxt">Your Test Data is Being Loaded, Please Wait...</p></h2>
+      </div>
+      <div id="spinner"></div>
+    </div>
+    <div id="overlay"></div>
+    
+    <div id="closeTest" class="formbody" style="display:none">
+      <div class="formhdr">
+        <h2 id="closeTitle" class="center-text">TEST NAME</h2>
+      </div>
+      <div class="formrow">
+        <h2 class="center-text">TEST <span id="testName"></span> IS NOW CLOSED FOR <span id="closedFor"></span>.</h2>
+        <p class="center-text">Thanks for Taking the Test, and Best of Luck with Your Results!</p>
+      </div>
+    </div>
+  
+  <?!= include("JavaScript"); ?>
+  
+  </body>
+
+</html>
