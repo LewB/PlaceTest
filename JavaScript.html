@@ -1,0 +1,626 @@
+<script>
+/************************************************************/
+/* GLOBAL VARIABLE AREA                                     */
+/************************************************************/
+      var G_logoFID = "";
+      var G_file, 
+          G_reader = new FileReader();
+      
+      var GD = {
+            test: "",
+            code: "",
+            user: "",
+            currPg: 1,
+            lastPg: 1,
+            maxTime: 0,
+            startTime: "",
+            queTxts: [],
+            queImgs: [],
+            queData: [],
+            ansTyps: [],
+            ansImgs: [],
+            ansTxts: [],
+            ansStat: [] };
+
+/************************************************************/
+/* WINDOW LOAD FUNCTION AND CALLBACK ROUTINE                */
+/************************************************************/
+      window.onload = function () {
+        document.getElementById("logMsg").textContent = "Loading Form Elements, Please Wait...";
+        document.body.style.cursor = "progress";
+       
+        google.script.run
+            .withSuccessHandler(initSuccess)
+            .initTestForm();
+      };
+      
+      function initSuccess(e) {
+        document.body.style.cursor = "default";
+        document.getElementById("verNum").textContent = e.version;
+        document.getElementById("logMsg").textContent = "Enter Your Full Foxcroft Email Address and Test Code";
+        
+        if (e.status != "OK") {
+          alert(e.result);
+          document.getElementById("hdrLogo").src = getNewImage("");
+          document.getElementById("titleLogo").src = getNewImage("");
+        } else if (e.logoFID != null && e.logoFID != "") {
+            G_logoFID = e.logoFID;
+            var srcURL = "https://drive.google.com/uc?id=" + G_logoFID;
+            document.getElementById("hdrLogo").src = srcURL;
+            document.getElementById("titleLogo").src = srcURL;
+        }
+        return;
+      }
+/************************************************************/
+/* SUBMIT LOGIN FUNCTION AND CALLBACK ROUTINE               */        
+/************************************************************/
+      function submitLogin() {
+        toggleLoader("on", "Validating Your Login and Loading Test Data, Please wait...");
+        
+        var loadSpec = { email: document.getElementById("email").value,
+                         test: document.getElementById("test").value.toUpperCase(),
+                         code: document.getElementById("code").value };
+        google.script.run
+            .withSuccessHandler(initTestParams)
+            .initTestItems(loadSpec);
+      }
+        
+      function initTestParams(e) {
+      /* RETURN DATA FROM TEST SPREADSHEET ON SERVER (GOOGLE DRIVE) */
+        if (e.status != "OK") {
+          alert("ERROR: " + e.result);
+          GD.user = "";
+          GD.test = "";
+          GD.code = "";
+          document.getElementById("email").focus();
+          toggleLoader("off", "");
+          return;
+        }
+        
+        /* alert("Result: " + e.result); */
+        
+        /* RESET PAGE AND STORAGE ARRAY VARIABLES */
+        GD.test = document.getElementById("test").value.toUpperCase();
+        GD.code = document.getElementById("code").value;
+        document.getElementById("title").textContent = e.title;
+        document.getElementById("closeTitle").textContent = e.title;
+        document.getElementById("docLink").href = e.dLurl;
+        document.getElementById("docLink").textContent = e.dLname;
+        GD.user = e.user;
+        document.getElementById("usrname").textContent = GD.user;
+        GD.lastPg = e.pages;
+        document.getElementById("qTot").textContent = GD.lastPg;
+        GD.maxTime = e.time;
+          
+        /* PRELOAD QUESTION/ANSWER TEXT AND IMAGES FOR EACH PAGE */
+        var lpg = Number(GD.lastPg);
+        var type;
+        
+        for (var i = 0; i < lpg; i++) {
+        
+          /* LOAD TEST QUESTIONS */
+          if (e.quesTxts[i] != null) {
+            GD.queTxts.push(e.quesTxts[i]);
+          } else {
+            GD.queTxts.push("");
+          }
+          // alert("Push Imgs - Idx: " + i + " Img src: " + e.quesImgs[i] + " Data: " + e.quesData[i]);
+          GD.queImgs.push(getNewImage(e.quesImgs[i]));
+          GD.queData.push(e.quesData[i]);
+            
+          /* LOAD TEST ANSWERS */
+          type = e.ansrTyps[i];
+          GD.ansTyps.push(type);
+          GD.ansImgs.push(getNewImage(e.ansrImgs[i]));
+          GD.ansTxts.push(e.ansrTxts[i]);
+          GD.ansStat.push("");
+          // alert("INIT Qidx: " + i + " TYPE: " + type + " SRVER: " + e.ansrTxts[i] + " DATA: " + GD.queData[i]);
+          /* SET ANSWER STATUS - DONE OR NOT */
+          if (type == "Image") {
+            if (e.ansrImgs[i] != null && e.ansrImgs[i] != "") {
+              GD.ansStat[i] = "Done";
+            }
+          } else {
+            if (e.ansrTxts[i] != null && e.ansrTxts[i] != "" && e.ansrTxts.length > 0) {
+              GD.ansStat[i] = "Done";
+            } else {
+              if (type == "None") {
+                GD.ansStat[i] = "Done";
+              }
+            }
+          }
+        }
+        /* LOAD UP DOT BUTTONS FOR PAGE NAVIGATION */
+        var k;
+        var dstr = "<div class='pDBlabel'><span class='pDBlabelTxt'>QUESTIONS: </span></div>";
+        for (k = 1; k <= lpg; k++) {
+            dstr += "<div class='pageDotWrap'><div id='dot-" + k + "' class='pgDot'>" + k + "</div></div>";
+        }
+        document.getElementById("pageDotBar").innerHTML = dstr;
+        for (k = 1; k <= lpg; k++) {
+          document.getElementById("dot-" + k).onclick = pgDotClick;
+        }
+        /* SET UP INITIAL START TIME */
+        GD.startTime = e.started;
+        /* START COUNTDOWN TIMER (NOT USED FOR NOW)
+        setTimer(GD.maxTime);
+        */
+        /* SWITCH TO MAIN TEST FORM */
+        document.getElementById("loginform").style.display = "none";
+        document.getElementById("form-1").style.display = "block";
+        loadCurrPage();
+        /* SHOW TEST INSTRUCTIONS SPLASH SCREEN */
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("InstPop").style.display = "block";
+        var iTxt = document.getElementById("tstInstTxt");
+        iTxt.style.display = "none"
+        iTxt.value = e.testInst;
+        google.script.run
+            .withSuccessHandler(fitTextArea)
+            .withUserObject(iTxt)
+            .clientDelay(0);
+      }
+/************************************************************/
+/* INSTRUCTION SCREEN OK BUTTON CLICK FUNCTION              */
+/************************************************************/
+      function InstPopOkClick() {
+        /* Close the Instruction Screen and Show the Main Page */
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("InstPop").style.display = "none";
+      }
+/************************************************************/
+/* GET NEW IMAGE FUNCTION                                   */
+/************************************************************/
+      function getNewImage(fid) {
+        var img = new Image();
+        if (fid != null && fid != "" && fid.length > 0) {
+          img.src = "https://drive.google.com/uc?id=" + fid;
+        } else {
+          img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
+          /* This sets "src" to a 1px transparent Base64 encoded GIF image */
+        }
+        return img;
+      }
+/************************************************************/
+/* PAGE PREV/NEXT BTN FUNCTION - Displays Prev or Next Page */
+/************************************************************/
+      function pgStep(dir) {
+        var nxtPg = Number(GD.currPg) + Number(dir);
+        if (nxtPg > 0 && nxtPg <= Number(GD.lastPg)) {
+          pgCheckAns(nxtPg);
+        }
+      }
+/*************************************************************/
+/* PAGE DOT SHOW FUNCTION - Displays All Page Dots to Select */
+/*************************************************************/
+      function pgDotShow() {
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("PageNav").style.display = "block";
+      }
+/************************************************************/
+/* PAGE DOT CLICK FUNCTION - Sets New Page To Display       */
+/************************************************************/
+      function pgDotClick() {
+        var elId = this.id;
+        var newPg = elId.split("-",2)[1];
+        /* Close the Page Dot Screen and Show the Main Page */
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("PageNav").style.display = "none";
+        pgCheckAns(newPg);
+      }
+/************************************************************/
+/* CHECK PAGE FUNCTION - Checks for an Unsubmitted Answer   */
+/************************************************************/
+      function pgCheckAns(nxtPg) {
+        /* Check for Newly Entered Answers Before Loading the New Page */
+        var chkpg = false;
+        var idx = Number(GD.currPg - 1);
+        if (GD.ansTyps[idx] == "Image") {
+          if (GD.ansImgs[idx].src.split(":",2)[0] == "data"
+                  && document.getElementById("ansfname").innerHTML != "No File Selected") {
+            chkpg = true;
+          }
+        }
+        if (GD.ansTyps[idx] == "Para Text") {
+          // alert("In Ptxt - value: " + document.getElementById("ansTxt").value + " Stored: " + GD.ansTxts[idx]);
+          if (document.getElementById("ansTxt").value != "" && GD.ansTxts[idx] == "") {
+            chkpg = true;
+          }
+        }
+        if (GD.ansTyps[idx] == "Short Text") {
+          if (document.getElementById("ansBox").value != "" && GD.ansTxts[idx] == "") {
+            chkpg = true;
+          }
+        }
+        if (GD.ansTyps[idx] == "Multi Choice") {
+          var btnGrp = document.getElementById("ansMCx").elements;
+          // alert("In MCX - value: " + btnGrp['rdogrp'].value + " Stored: " + GD.ansTxts[idx]);
+          if (btnGrp['rdogrp'].value != "" && GD.ansTxts[idx] == "") {
+            chkpg = true;
+          }
+        }
+        /* chkpg Always False for Type "None" */
+        /* If chkpg is true - Show Confirm Page Change Alert Dialog */
+        if (chkpg == true) {
+          if (confirm("*** FOXCROFT EVALUATION TEST ***\n\n\nYour Answer Has Not Been Submitted, It Will Be Discarded.\n\nContinue to Page: " + newPg + " Anyway?") == false) {
+            return;
+          }
+        }
+        //alert("Going from: " + GD.currPg + " to Page: " + nxtPg);
+        GD.currPg = nxtPg;
+        loadCurrPage();
+      }
+/************************************************************/
+/*    LOAD CURRENT PAGE FUNCTION AND CALLBACK ROUTINE       */
+/************************************************************/
+      function loadCurrPage() {
+        /* DISPLAY SPINNER HERE */
+        document.body.style.cursor = "progress";
+        toggleLoader("on", "Test Page is Being Loaded, Please wait...");
+        
+        /* SET PAGE NUMBERS AND NAVIGATION BUTTON STATE */
+        document.getElementById("qNum").textContent = " " + GD.currPg;
+        document.getElementById("aNum").textContent = " " + GD.currPg;
+        
+        /* SET QUESTION/ANSWER TEXT AND FILE IMAGES */
+        var idx = Number(GD.currPg - 1);
+        
+        /* CALL APP SERVER TO DELAY AND RETURN TO RESIZE QUESTION TEXTAREA */
+        var qTxt = document.getElementById("queText");
+        qTxt.style.display = "none"
+        qTxt.value = GD.queTxts[idx];
+        google.script.run
+            .withSuccessHandler(fitTextArea)
+            .withUserObject(qTxt)
+            .clientDelay(0);
+            
+        /* SETUP QUESTION IMAGE AREA */
+        var srcTyp;
+        srcTyp = GD.queImgs[idx].src.split(":",2)[0];
+        if (GD.ansTyps[idx] == "None" || srcTyp == "data" || GD.queImgs[idx].src.length < 1) {
+          document.getElementById("queImg").style.display = "none";
+        } else {
+          document.getElementById("queImg").src = GD.queImgs[idx].src;
+          document.getElementById("queImg").style.display = "block";
+        }
+
+        /* RESET DOCUMENT ELEMENTS */
+        document.getElementById("qNumTxt").textContent = "NO CALCULATOR QUESTION NUMBER: ";
+        document.getElementById("subBtn").textContent = "Submit Answer";
+        document.getElementById("fileBtn").textContent = "Get Answer File";
+        document.getElementById("ansfname").textContent = "No File Selected"
+        document.getElementById("fsLabl").style.visibility = "hidden";
+        document.getElementById("ansfsize").style.visibility = "hidden";
+        document.getElementById("subBtn").style.display = "block";
+        document.getElementById("answer").style.display = "block";
+        document.getElementById("ansImg").style.display = "none";
+        document.getElementById("ansTxt").style.display = "none";
+        document.getElementById("ansBox").style.display = "none";
+        document.getElementById("ansMCx").style.display = "none";
+        document.getElementById("fileInp").style.display = "none";
+        document.getElementById("subBtn").disabled = false;
+        
+        /* PERFORM SPECIAL SETTING ACTIONS FOR SPECIFIC ANSWER TYPES */
+        var pset = GD.queData[idx];
+        
+        switch(GD.ansTyps[idx]) {
+            
+        case "Image":
+          document.getElementById("ansImg").src = GD.ansImgs[idx].src;
+          srcTyp = GD.ansImgs[idx].src.split(":",2)[0];
+          if (GD.ansImgs[idx].src.length && srcTyp != "data") {
+            document.getElementById("ansImg").src = GD.ansImgs[idx].src;
+            document.getElementById("ansfname").textContent = "Current Answer File"
+            document.getElementById("fileBtn").textContent = "New Answer File";
+            showMessage("To Change Answer Click 'New Answer File' and Select an Image File to Upload.");
+          } else {
+            /* Special 1px Blank Image */
+            showMessage("To Answer Question Click 'Get Answer File' and Select an Image File to Upload.");
+          }
+          document.getElementById("fileInp").style.display = "block";
+          document.getElementById("ansImg").style.display = "block";
+          break;
+
+        case "Para Text":
+          // alert("In Para - Data: " + txt);
+          if (pset != null && pset != "" && typeof pset != "undefined") {
+            var prc = pset.split(",");
+            document.getElementById("ansTxt").rows = prc[0]; /* First Value */
+            document.getElementById("ansTxt").cols = prc[1]; /* Second Value */
+          } else {
+            /* Default */
+            document.getElementById("ansTxt").rows = "12";
+            document.getElementById("ansTxt").cols = "60";
+          }
+          document.getElementById("ansTxt").value = GD.ansTxts[idx];
+          document.getElementById("ansTxt").style.display = "block";
+          showMessage("Type Your Response and Click 'Submit Answer'.");
+          break;
+          
+        case "Short Text":
+          // alert("In Short Txt - Data: " + txt);
+          if (pset != null && pset != "" && typeof pset != "undefined") {
+            var len = pset.toString();
+            document.getElementById("ansBox").maxlength = len;
+          }
+          document.getElementById("ansBox").value = GD.ansTxts[idx];
+          document.getElementById("ansBox").style.display = "block";
+          showMessage("Type Your Response and Click 'Submit Answer'.");
+          break;
+
+        case "Multi Choice":
+          // alert("In MCX - Data: " + GD.ansTxts[idx]);
+          if (pset != null && pset != "" && typeof pset != "undefined") {
+            var mstr = "";
+            var chx = pset.split(",");
+            for (var j = 0; j < chx.length; j++) {
+              if (j > 0) {
+                mstr = mstr + "<br>";
+              }
+              mstr = mstr + "<input type='radio' name='rdogrp' value='" + chx[j] + "'>" + chx[j];
+            }
+            mstr = mstr + "<br><br>";
+            // alert("In MCX - HTML: " + mstr);
+            document.getElementById("ansMCx").innerHTML = mstr;
+          }
+          var btnGrp = document.getElementById("ansMCx").elements;
+          btnGrp['rdogrp'].value = GD.ansTxts[idx];
+          document.getElementById("ansMCx").style.display = "block";
+          showMessage("Select Your Choice and Click 'Submit Answer'.");
+          break;
+          
+        case "None":
+          document.getElementById("qNumTxt").textContent = "PAGE NUMBER: ";
+          document.getElementById("answer").style.display = "none";
+          document.getElementById("subBtn").disabled = true;
+          document.getElementById("subBtn").style.display = "none";
+          showMessage("Click Page Buttons to Navigate the Test.");
+          break;
+                
+        default:
+          /* This should never happen - but it could */
+          document.getElementById("ansTxt").style.display = "block";
+          document.getElementById("ansTxt").value = "*** Unknown Answer Type: " + GD.ansTyps[idx] + " ***";
+          document.getElementById("fileInp").style.display = "none";
+          document.getElementById("subBtn").disabled = true;
+          showError("SYSTEM ERROR: Unknown Answer Type in Test Configuration.");
+          break;
+                
+        } /* End Switch */
+
+        /* SET PAGE NAVIGATION AND DOT STATUS STYLES */
+        var dotId = "";
+        var dotsts;
+        for (var i = 1; i <= Number(GD.lastPg); i++) {
+          dotId = "dot-" + i;
+          dotsts = "pgDot";
+          //alert("Dot-" + i + " Status: " + GD.ansStat[i-1]);
+          if (GD.ansStat[i-1] == "Done") {
+             dotsts = "pgDot-done";
+          }
+          document.getElementById(dotId).className = dotsts;
+        }
+        dotId = "dot-" + GD.currPg;
+        document.getElementById(dotId).className = "pgDot-on";
+        /* KILL SPINNER AND DISPLAY NEW TEST PAGE CONTENTS */
+        toggleLoader("off", "");
+        /* NOTE: Cursor Progress Spinner Will Be Cancelled in fitTextArea() Callback Routine */
+      }
+      
+      function fitTextArea(e, text) {
+        text.style.height = "0px"; // Force it to shrink first to handle less text
+        text.style.display = "block"; // Gotta do this before resizing so it resizes
+        if (text.clientHeight < text.scrollHeight) {
+          //alert("1st Height is less than Scroll Height, Setting to: " + text.scrollHeight + "px");
+          text.style.height = text.scrollHeight + "px";
+          /* if (text.clientHeight < text.scrollHeight) {
+            alert("2nd Height is less than Scroll Height, Setting to: " + (text.scrollHeight * 2 - text.clientHeight) + "px");
+            text.style.height = (text.scrollHeight * 2 - text.clientHeight) + "px";
+          } ONLY NEEDED IF SCROLL HEIGHT IS NOT SET TO ZERO FIRST */
+        }
+        document.body.style.cursor = "default";
+      }
+/*********************************************************************/
+/* SUBMIT FORM FUNCTION AND CALLBACK ROUTINES - Submits Answer Files */
+/*********************************************************************/
+      function submitForm() {
+        var idx = GD.currPg - 1;
+        if (GD.ansTyps[idx] == "Image") {
+          var filelist = document.getElementById('files');
+          if (filelist.files.length === 0) {
+            showError("Please select a file to upload");
+            return;
+          }
+          G_file = filelist.files[0];
+          if (G_file.size > 1024 * 1024 * 2) {
+            showError("The file size should be < 2 MB.");
+            return;
+          }
+          document.getElementById("fileBtn").disabled = true;
+          document.getElementById("files").disabled = true;
+          
+          G_reader.readAsDataURL(G_file);
+          
+        } else {
+          toggleLoader("on", "Your Answer Is Being Submitted Now - Please Wait...");
+          
+          var data = "";
+          if (GD.ansTyps[idx] == "Para Text") {
+            data = document.getElementById("ansTxt").value;
+          } else {
+            if (GD.ansTyps[idx] == "Short Text") {
+              data = document.getElementById("ansBox").value;
+            } else {
+              if (GD.ansTyps[idx] == "Multi Choice") {
+                var btnGrp = document.getElementById("ansMCx").elements;
+                data = btnGrp['rdogrp'].value;
+              }
+            }
+          }
+          google.script.run
+            .withSuccessHandler(showTextSuccess)
+            .uploadFileToGoogleDrive(data, "", GD.ansTyps[idx], GD.test, GD.user, GD.currPg);
+        }
+      }
+      
+      G_reader.onloadend = function(e) {
+        if (e.target.error != null) {
+          showError("File " + G_file.name + " Could Not Be Accessed.");
+          return;
+        } else {
+          toggleLoader("on", "Your File Is Being Uploaded Now - Please Wait...");
+          
+          google.script.run
+            .withSuccessHandler(showImageSuccess)
+            .uploadFileToGoogleDrive(e.target.result, G_file.name, "Image", GD.test, GD.user, GD.currPg);
+        }
+      }
+      
+      function showImageSuccess(e) {
+        toggleLoader("off", "");
+        document.getElementById("fileBtn").disabled = false;
+        document.getElementById("files").disabled = false;
+        if (e.split(":",1)[0] === "ERROR") {
+          showMessage("Could Not Upload and Record the Selected File.");
+        } else {
+          var idx = GD.currPg - 1;
+          GD.ansImgs[idx].src = "https://drive.google.com/uc?id=" + e;
+          document.getElementById("ansImg").src = GD.ansImgs[idx].src;
+          GD.ansStat[idx] = "Done";
+          showMessage("The Selected File was Successfully Uploaded.");
+        }
+      }
+      
+      function showTextSuccess(e) {
+        toggleLoader("off", "");
+        if (e.split(":",1)[0] == "ERROR") {
+          showError(e);
+        } else {
+          var idx = GD.currPg - 1;
+          GD.ansTxts[idx] = e.split(":",2)[1];
+          GD.ansStat[idx] = "Done";
+          showMessage("Your Answer was Successfully Submitted.");
+        }
+      }
+/************************************************************/
+/* CLOSE TEST FUNCTION AND CALLBACK ROUTINE                 */
+/************************************************************/
+      function closeTest() {
+        var lpg = Number(GD.lastPg);
+        for (var i = 0; i < lpg; i++) {
+          if ( GD.ansStat[i] != "Done" && GD.ansTyps[i] != "None") {
+            break;
+          }
+        }
+        if ( i < lpg ) {
+          ans = confirm("*** FOXCROFT EVALUATION TEST ***\nYOU HAVE UNANSWERED QUESTIONS REMAINING.\n\nDo You Still Want To Proceed?");
+          if (ans == false) {
+            return;
+          }
+        }
+        ans = confirm("*** FOXCROFT EVALUATION TEST ***\nYOU WILL NOT BE ABLE TO ACCESS THIS TEST ONCE IT IS CLOSED.\n\nDo You Still Want To Proceed?");
+        if (ans == false) {
+          return;
+        }
+        toggleLoader("on", "Your Test is Being Closed, Please wait...");
+        var data = { test: GD.test,
+            user: GD.user,
+            lastPg: GD.lastPg,
+            maxTime: GD.maxTime,
+            startTime: GD.startTime,
+            ansTyps: GD.ansTyps,
+            ansTxts: GD.ansTxts,
+            ansStat: GD.ansStat };
+      
+        google.script.run
+            .withSuccessHandler(showCloseSuccess)
+            .closeTestSession(data);
+      }
+      
+      function showCloseSuccess(e) {
+        //alert("RETURNED FROM SERVER, RESULT IS: " + e);
+        if (e == "OK") {
+          document.getElementById("form-1").style.display = "none";
+          toggleLoader("off", "");
+          document.getElementById("testName").textContent = GD.test;
+          document.getElementById("closedFor").textContent = GD.user;
+          document.getElementById("closeTest").style.display = "block";
+        } else {
+          showError(e);
+          toggleLoader("off", "");
+        }
+        return;
+      }
+/************************************************************/
+/* FILE SELECTED FUNCTION                                   */
+/************************************************************/
+      function fileSelected() {
+        var fnam = document.getElementById("files").files[0].name;
+        var fsize = document.getElementById("files").files[0].size;
+        if (fsize < 1000) {
+          fsize = fsize.toString().split(".")[0] + " Bytes";
+        } else if (fsize < 1000000) {
+          fsize = Number(fsize) / 1000;
+          fsize = fsize.toString().split(".")[0] + " KB";
+        } else {
+          fsize = Number(fsize) / 1000000;
+          fsize = fsize.toString().split(".")[0] + " MB";
+        }
+        document.getElementById("ansfname").textContent = fnam;
+        document.getElementById("ansfsize").textContent = fsize;
+        document.getElementById("fsLabl").style.visibility = "visible";
+        document.getElementById("ansfsize").style.visibility = "visible";
+        showMessage("Press Upload Button to Submit the Selected File.");
+      }
+/************************************************************/
+/* SET TIMER FUNCTION - Sets Up and Starts Countdown Timer  */
+/************************************************************/
+      function setTimer(max) {
+        return;
+        /*
+        var start = Date.now();
+        var msecs = max * 60000;
+        GD.startTime = start;
+        var tmr = document.getElementById('timer');
+        
+        (function f() {
+          var diff = Date.now() - start;
+          var ns = (((msecs - diff) / 1e3) >> 0);
+          var m = (ns/60) >> 0,s = ns - m * 60;
+          tmr.textContent = m + ':' + (('' + s).length > 1 ? '' : '0') + s;
+          if (diff > 3e5) {
+            start = Date.now();
+          }
+          setTimeout(f, 1e3);
+        })();
+        */
+      }
+/*********************************************************************************/
+/* TOGGLE LOADER FUNCTION - Shows/Hides Loader+Spinner System Busy Screen        */
+/*********************************************************************************/
+      function toggleLoader(sw, msg) {
+        document.getElementById("spinTxt").textContent = msg;
+        if (sw == "on") {
+          document.getElementById("overlay").style.display = "block";
+          document.getElementById("loader").style.display = "block";
+        } else {
+          document.getElementById("loader").style.display = "none";
+          document.getElementById("overlay").style.display = "none";
+        }
+      }
+/************************************************************/
+/* SHOW ERROR FUNCTION                                      */
+/************************************************************/
+      function showError(e) {
+        document.getElementById("progress").style.color = "red";
+        document.getElementById("progress").textContent = e;
+      }
+/************************************************************/
+/* SHOW MESSAGE FUNCTION                                    */
+/************************************************************/
+      function showMessage(e) {
+        document.getElementById("progress").style.color = "black";
+        document.getElementById("progress").textContent = e;
+      }
+
+</script>
