@@ -37,7 +37,7 @@
       function initSuccess(e) {
         document.body.style.cursor = "default";
         document.getElementById("verNum").textContent = e.version;
-        document.getElementById("logMsg").textContent = "Enter Your Full Foxcroft Email Address and Test Code";
+        document.getElementById("logMsg").textContent = "Enter Your Full Email Address and Test Code";
         
         if (e.status != "OK") {
           alert(e.result);
@@ -169,7 +169,7 @@
         document.getElementById("InstPop").style.display = "none";
       }
 /************************************************************/
-/* GET NEW IMAGE FUNCTION                                   */
+/* GET NEW IMAGE FUNCTION - BASED ON GOOGLE FILE ID         */
 /************************************************************/
       function getNewImage(fid) {
         var img = new Image();
@@ -177,7 +177,7 @@
           img.src = "https://drive.google.com/uc?id=" + fid;
         } else {
           img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
-          /* This sets "src" to a 1px transparent Base64 encoded GIF image */
+          /* This sets "src" to a 1 pixel transparent Base64 encoded GIF image */
         }
         return img;
       }
@@ -242,7 +242,7 @@
         /* chkpg Always False for Type "None" */
         /* If chkpg is true - Show Confirm Page Change Alert Dialog */
         if (chkpg == true) {
-          if (confirm("*** FOXCROFT EVALUATION TEST ***\n\n\nYour Answer Has Not Been Submitted, It Will Be Discarded.\n\nContinue to Page: " + newPg + " Anyway?") == false) {
+          if (confirm("*** ONLINE EVALUATION TEST ***\n\n\nYour Answer Has Not Been Submitted, It Will Be Discarded.\n\nContinue to Page: " + newPg + " Anyway?") == false) {
             return;
           }
         }
@@ -513,12 +513,12 @@
           }
         }
         if ( i < lpg ) {
-          ans = confirm("*** FOXCROFT EVALUATION TEST ***\nYOU HAVE UNANSWERED QUESTIONS REMAINING.\n\nDo You Still Want To Proceed?");
+          ans = confirm("*** ONLINE EVALUATION TEST ***\nYOU HAVE UNANSWERED QUESTIONS REMAINING.\n\nDo You Still Want To Proceed?");
           if (ans == false) {
             return;
           }
         }
-        ans = confirm("*** FOXCROFT EVALUATION TEST ***\nYOU WILL NOT BE ABLE TO ACCESS THIS TEST ONCE IT IS CLOSED.\n\nDo You Still Want To Proceed?");
+        ans = confirm("*** ONLINE EVALUATION TEST ***\nYOU WILL NOT BE ABLE TO ACCESS THIS TEST ONCE IT IS CLOSED.\n\nDo You Still Want To Proceed?");
         if (ans == false) {
           return;
         }
@@ -577,7 +577,7 @@
 /************************************************************/
       function setTimer(max) {
         return;
-        /*
+        /* TIMER REMOVED FOR NOW
         var start = Date.now();
         var msecs = max * 60000;
         GD.startTime = start;

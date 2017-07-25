@@ -1,6 +1,7 @@
 /* Placement Quiz */
 /* ALB 6-4-2017 */
 /* Publish to GitHub - 7-8-2017 */
+/* Sanitized - 7-25-17 */
 
 function doGet(e) {
 
@@ -16,7 +17,7 @@ function include(filename) {
 }
 
 /*************************************************************************/
-/*                   RETURN MASTER SPREADSHEET FILE ID                   */
+/*          RETURN MASTER SPREADSHEET GOOGLE FILE ID                     */
 /*************************************************************************/
 function getMasterSheet(testname) {
   
@@ -26,13 +27,9 @@ function getMasterSheet(testname) {
 /**               ONLY MODIFY THIS WITH THE ID OF THIS FILE WHICH       **/
 /**               YOU WILL NEED TO DO IF YOU MADE A COPY OF THE FILE    **/
 /**                                                                     **/
-  var mFID = "1xxyXTRAneHlQEwk6EOdQ_qzaRk5hStS5bQ0R8MlW7Yo";
-/**           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              **/
-/**                       ^ CHANGE ONLY THIS ^                          **/
+  var mFID = "<Google FID Here>";
 /**                                                                     **/
-/** LIVE mFID = "1vofSUuEuyY_VtiJzXVoeewdkDngp8cPGANFZ8Udy7Ik";         **/
 /**                                                                     **/
-/** TEST mFID = "1xxyXTRAneHlQEwk6EOdQ_qzaRk5hStS5bQ0R8MlW7Yo";         **/
 /**                                                                     **/
 /*************************************************************************/
 /*************************************************************************/
@@ -64,7 +61,7 @@ function initTestForm() {
              version: "0.50"};
              
   var ts = getMasterSheet("SETTINGS");
-  var fid = ts.getRange(2, 2).getValue(); /* Foxcroft Logo */
+  var fid = ts.getRange(2, 2).getValue(); /* Logo Google File ID */
              
   if (fid != null && fid != "") {
     ret.logoFID = fid;
@@ -494,7 +491,7 @@ function closeTestSession(ud) {
     }
     //Logger.log("USER STATUS FILE UPDATED.");
     if (closed == false) {
-      return("No Student with Email '" + ud.user + "@foxcroft.org" + "' is Authorized for Test '" + ud.test + "'.");
+      return("No Student with Email '" + ud.user + "@domain.org" + "' is Authorized for Test '" + ud.test + "'.");
     }
     
     //Logger.log("UPDATE - COMPLETE.");
@@ -583,8 +580,4 @@ function clientDelay(ms) {
   }
   return(ms);
 }
-
-/*****************************************************/
-/* Function to convert Answer File names             */
-/*****************************************************/
 
